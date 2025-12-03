@@ -9,4 +9,14 @@
     --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif,
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
         "Noto Color Emoji";
+
+    /* Primary color override */
+    --color-indigo-500: #201E43;
+    --color-indigo-400: #201E43;
+    --color-indigo-300: #201E43;
+}
+
+/* Hide Alpine-managed elements until hydrated */
+[x-cloak] {
+    display: none !important;
 }
