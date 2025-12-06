@@ -94,7 +94,63 @@ class ProductController extends Controller
      */
     public function category(string $slug): View
     {
-        return view('pages.products.category', compact('slug'));
+        $category = Category::where('slug', $slug)->where('is_active', true)->firstOrFail();
+
+        $categories = Category::query()
+            ->where('is_active', true)
+            ->withCount('products')
+            ->orderBy('name')
+            ->get();
+
+        $products = Product::with(['category'])
+            ->where('status', 'active')
+            ->whereHas('category', function ($q) use ($slug) {
+                $q->where('slug', $slug);
+            })
+            ->when(request('min_price'), function ($query) {
+                $query->where('price', '>=', request('min_price'));
+            })
+            ->when(request('max_price'), function ($query) {
+                $query->where('price', '<=', request('max_price'));
+            })
+            ->when(request('in_stock') === '1', function ($query) {
+                $query->where('stock', '>', 0);
+            })
+            ->when(request('sort'), function ($query) {
+                $sort = request('sort');
+                if ($sort === 'price_asc') {
+                    $query->orderBy('price', 'asc');
+                } elseif ($sort === 'price_desc') {
+                    $query->orderBy('price', 'desc');
+                } elseif ($sort === 'name_asc') {
+                    $query->orderBy('name', 'asc');
+                } elseif ($sort === 'name_desc') {
+                    $query->orderBy('name', 'desc');
+                } else {
+                    $query->latest();
+                }
+            }, function ($query) {
+                $query->latest();
+            })
+            ->paginate(12)
+            ->withQueryString();
+
+        $products->getCollection()->transform(function ($product) {
+            $product->original_price = $product->compare_at_price;
+            $product->discount = $product->compare_at_price && $product->compare_at_price > $product->price
+                ? (int) round((($product->compare_at_price - $product->price) / $product->compare_at_price) * 100)
+                : null;
+            $product->image_url = $product->thumbnail;
+            return $product;
+        });
+
+        $minPrice = Product::where('status', 'active')->min('price') ?? 0;
+        $maxPrice = Product::where('status', 'active')->max('price') ?? 10000000;
+
+        // Set category filter in request for view
+        request()->merge(['category' => $slug]);
+
+        return view('pages.products.index', compact('categories', 'products', 'minPrice', 'maxPrice', 'category'));
     }
 
     /**

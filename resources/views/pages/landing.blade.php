@@ -37,7 +37,10 @@
                     {{-- CATEGORY PILLS (centered) --}}
                     <div class="flex flex-wrap justify-center gap-3">
                         @forelse ($popularCategories as $category)
-                            <x-category-pill :label="$category->name" :icon="$category->icon ?? '/icons/category.svg'" />
+                            <a href="{{ route('products.category', $category->slug) }}"
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 cursor-pointer transition text-sm font-semibold text-slate-800 whitespace-nowrap">
+                                <span>{{ $category->name }}</span>
+                            </a>
                         @empty
                             <p class="text-center text-xs text-slate-500">
                                 Belum ada kategori yang bisa ditampilkan.

@@ -22,6 +22,22 @@
                 <p class="mt-2 text-sm text-slate-600">
                     Menampilkan produk yang sesuai dengan kata kunci pencarian
                 </p>
+            @elseif (isset($category))
+                <div class="mb-4 flex items-center gap-2">
+                    <a href="{{ route('products.index') }}"
+                        class="inline-flex items-center text-xs text-slate-500 hover:text-slate-700">
+                        <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Kembali ke semua produk
+                    </a>
+                </div>
+                <h1 class="text-3xl font-extrabold text-slate-900">
+                    Kategori: {{ $category->name }}
+                </h1>
+                <p class="mt-2 text-sm text-slate-600">
+                    {{ $category->description ?? 'Menampilkan produk dalam kategori ini' }}
+                </p>
             @else
                 <h1 class="text-3xl font-extrabold text-slate-900">Katalog Produk</h1>
                 <p class="mt-2 text-sm text-slate-600">
