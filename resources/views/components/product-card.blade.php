@@ -5,7 +5,7 @@
 @endphp
 
 <div
-    class="group flex flex-col rounded-2xl border border-slate-800 bg-slate-950/80 overflow-hidden hover:-translate-y-1 hover:border-indigo-500/70 hover:shadow-[0_18px_55px_rgba(15,23,42,0.9)] transition-all duration-300">
+    class="group flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden hover:-translate-y-1 hover:border-indigo-200 hover:shadow-[0_18px_55px_rgba(15,23,42,0.18)] transition-all duration-300">
     <a href="{{ $productParam ? route('products.show', $productParam) : '#' }}"
         class="relative block aspect-[4/3] bg-slate-900 overflow-hidden">
         @if (!empty($product->image_url))
@@ -42,24 +42,24 @@
 
     <div class="flex flex-1 flex-col px-3 pt-3 pb-3">
         <a href="{{ $productParam ? route('products.show', $productParam) : '#' }}"
-            class="text-sm font-semibold text-slate-50 line-clamp-2 tracking-tight">
+            class="text-sm font-semibold text-slate-900 line-clamp-2 tracking-tight">
             {{ $product->name }}
         </a>
         @if (!empty($product->category?->name))
-            <p class="mt-0.5 text-[11px] text-slate-400">
+            <p class="mt-0.5 text-[11px] text-slate-500">
                 {{ $product->category->name }}
             </p>
         @endif
 
         @if (!empty($product->switch_type))
-            <p class="mt-1 text-[11px] text-slate-400">
+            <p class="mt-1 text-[11px] text-slate-500">
                 {{ $product->switch_type }}
             </p>
         @endif
 
         <div class="mt-3 flex items-end justify-between">
             <div>
-                <p class="text-sm font-semibold text-indigo-300">
+                <p class="text-sm font-semibold text-indigo-600">
                     Rp {{ number_format($product->price, 0, ',', '.') }}
                 </p>
                 @if (!empty($product->original_price) && $product->original_price > $product->price)

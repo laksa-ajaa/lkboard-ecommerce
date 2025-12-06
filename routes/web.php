@@ -1,100 +1,74 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Models\Category;
-use App\Models\Product;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
+|
 | Semua route utama untuk halaman publik, auth, produk, cart, checkout,
-| wishlist, akun, dan admin dasar. Untuk sekarang masih menggunakan
-| closure yang langsung merender view.
+| wishlist, akun, dan admin.
+|
 */
 
-// Landing / homepage
-Route::get('/', function () {
-    $popularCategories = Category::query()
-        ->where('is_active', true)
-        ->orderBy('name')
-        ->take(6)
-        ->get();
+// Home / Landing
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
-    $featuredProducts = Product::with(['category'])
-        ->where('status', 'active')
-        ->latest()
-        ->take(8)
-        ->get()
-        ->map(function ($product) {
-            $product->original_price = $product->compare_at_price;
-            $product->discount = $product->compare_at_price && $product->compare_at_price > $product->price
-                ? (int) round((($product->compare_at_price - $product->price) / $product->compare_at_price) * 100)
-                : null;
-            $product->image_url = $product->thumbnail;
-            return $product;
-        });
-
-    return view('pages.landing', compact('popularCategories', 'featuredProducts'));
-})->name('home');
-
-// Auth (login & register berbasis view + controller)
-Route::view('/login', 'pages.auth.login')->name('login');
-Route::view('/register', 'pages.auth.register')->name('register');
-Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
+// Authentication
+Route::get('/login', fn() => view('pages.auth.login'))->name('login');
+Route::get('/register', fn() => view('pages.auth.register'))->name('register');
 Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
+Route::post('/logout', [LogoutController::class, 'store'])->name('logout');
 
-Route::post('/logout', function () {
-    Auth::logout();
-
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-
-    return redirect()->route('home')->with('status', 'Kamu sudah keluar dari akun LKBoard.');
-})->name('logout');
-
-// Produk
-Route::prefix('products')->name('products.')->group(function () {
-    Route::view('/', 'pages.products.index')->name('index');               // katalog / daftar produk
-    Route::view('/search', 'pages.products.search')->name('search');       // hasil pencarian
-    Route::view('/category/{slug}', 'pages.products.category')->name('category'); // filter by category
-    Route::view('/{product}', 'pages.products.show')->name('show');        // detail produk
+// Products
+Route::prefix('products')->name('products.')->controller(ProductController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::get('/search', 'search')->name('search');
+    Route::get('/category/{slug}', 'category')->name('category');
+    Route::get('/{product}', 'show')->name('show');
 });
 
 // Cart
-Route::view('/cart', 'pages.cart.index')->name('cart.index');
+Route::prefix('cart')->name('cart.')->group(function () {
+    Route::get('/', fn() => view('pages.cart.index'))->name('index');
+});
 
 // Checkout
 Route::prefix('checkout')->name('checkout.')->group(function () {
-    Route::view('/', 'pages.checkout.index')->name('index');
-    Route::view('/success', 'pages.checkout.success')->name('success');
+    Route::get('/', fn() => view('pages.checkout.index'))->name('index');
+    Route::get('/success', fn() => view('pages.checkout.success'))->name('success');
 });
 
 // Wishlist
-Route::view('/wishlist', 'pages.wishlist.index')->name('wishlist.index');
+Route::prefix('wishlist')->name('wishlist.')->group(function () {
+    Route::get('/', fn() => view('pages.wishlist.index'))->name('index');
+});
 
-// Akun user
+// Account
 Route::prefix('account')->name('account.')->group(function () {
-    Route::view('/', 'pages.account.index')->name('index'); // dashboard akun
+    Route::get('/', fn() => view('pages.account.index'))->name('index');
+    Route::get('/settings', fn() => view('pages.account.settings'))->name('settings');
 
-    Route::view('/settings', 'pages.account.settings')->name('settings'); // pengaturan user
+    Route::prefix('transactions')->name('transactions.')->group(function () {
+        Route::get('/', fn() => view('pages.account.transactions'))->name('index');
+        Route::get('/{id}', fn($id) => view('pages.account.transaction-show', compact('id')))->name('show');
+    });
 
-    Route::view('/transactions', 'pages.account.transactions')->name('transactions.index'); // riwayat pembelian
-    Route::view('/transactions/{id}', 'pages.account.transaction-show')->name('transactions.show'); // detail transaksi
-
-    Route::view('/address', 'pages.account.address')->name('address.index'); // daftar alamat user
-
-    Route::view('/tracking', 'pages.account.tracking')->name('tracking'); // lacak pesanan
+    Route::get('/address', fn() => view('pages.account.address'))->name('address.index');
+    Route::get('/tracking', fn() => view('pages.account.tracking'))->name('tracking');
 });
 
-// Admin (opsional untuk masa depan)
+// Admin
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::view('/dashboard', 'pages.admin.dashboard')->name('dashboard');
-    Route::view('/products', 'pages.admin.products')->name('products');
-    Route::view('/orders', 'pages.admin.orders')->name('orders');
-    Route::view('/users', 'pages.admin.users')->name('users');
+    Route::get('/dashboard', fn() => view('pages.admin.dashboard'))->name('dashboard');
+    Route::get('/products', fn() => view('pages.admin.products'))->name('products');
+    Route::get('/orders', fn() => view('pages.admin.orders'))->name('orders');
+    Route::get('/users', fn() => view('pages.admin.users'))->name('users');
 });
-

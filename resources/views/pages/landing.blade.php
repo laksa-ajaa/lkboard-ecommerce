@@ -217,22 +217,41 @@
                 class="rounded-2xl bg-slate-950/70 border border-slate-800 px-6 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 backdrop-blur">
 
                 <div>
-                    <h3 class="text-sm font-semibold text-slate-50">Baru kenal mechanical keyboard?</h3>
-                    <p class="mt-1 text-xs text-slate-400 leading-relaxed">
-                        Buat akun LKBoard dan mulai perjalanan setup pertamamu.
-                    </p>
+                    @auth
+                        <h3 class="text-sm font-semibold text-slate-50">Siap upgrade setup keyboard kamu?</h3>
+                        <p class="mt-1 text-xs text-slate-400 leading-relaxed">
+                            Jelajahi koleksi terbaru LKBoard dan lengkapi gear untuk produktivitas harianmu.
+                        </p>
+                    @else
+                        <h3 class="text-sm font-semibold text-slate-50">Baru kenal mechanical keyboard?</h3>
+                        <p class="mt-1 text-xs text-slate-400 leading-relaxed">
+                            Buat akun LKBoard dan mulai perjalanan setup pertamamu.
+                        </p>
+                    @endauth
                 </div>
 
                 <div class="flex gap-3">
-                    <a href="{{ route('register') }}"
-                        class="inline-flex items-center rounded-full bg-indigo-500 px-5 py-2 text-xs font-semibold text-white hover:bg-indigo-400 transition">
-                        Daftar Sekarang
-                    </a>
+                    @auth
+                        <a href="{{ route('products.index') }}"
+                            class="inline-flex items-center rounded-full bg-indigo-500 px-5 py-2 text-xs font-semibold text-white hover:bg-indigo-400 transition">
+                            Lihat Koleksi
+                        </a>
 
-                    <a href="{{ route('login') }}"
-                        class="inline-flex items-center rounded-full border border-slate-700 px-5 py-2 text-xs font-semibold text-slate-100 hover:bg-slate-900 transition">
-                        Sudah punya akun?
-                    </a>
+                        <a href="{{ route('account.index') }}"
+                            class="inline-flex items-center rounded-full border border-slate-700 px-5 py-2 text-xs font-semibold text-slate-100 hover:bg-slate-900 transition">
+                            Ke Akun Saya
+                        </a>
+                    @else
+                        <a href="{{ route('register') }}"
+                            class="inline-flex items-center rounded-full bg-indigo-500 px-5 py-2 text-xs font-semibold text-white hover:bg-indigo-400 transition">
+                            Daftar Sekarang
+                        </a>
+
+                        <a href="{{ route('login') }}"
+                            class="inline-flex items-center rounded-full border border-slate-700 px-5 py-2 text-xs font-semibold text-slate-100 hover:bg-slate-900 transition">
+                            Sudah punya akun?
+                        </a>
+                    @endauth
                 </div>
             </section>
         </div>
