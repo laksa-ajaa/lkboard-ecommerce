@@ -6,10 +6,28 @@
     <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-0">
         {{-- Header --}}
         <div class="mb-8">
-            <h1 class="text-3xl font-extrabold text-slate-900">Katalog Produk</h1>
-            <p class="mt-2 text-sm text-slate-600">
-                Temukan keyboard mechanical dan aksesoris pilihan untuk setup impianmu
-            </p>
+            @if ($searchQuery ?? null)
+                <div class="mb-4 flex items-center gap-2">
+                    <a href="{{ route('products.index') }}"
+                        class="inline-flex items-center text-xs text-slate-500 hover:text-slate-700">
+                        <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Kembali ke semua produk
+                    </a>
+                </div>
+                <h1 class="text-3xl font-extrabold text-slate-900">
+                    Hasil Pencarian: "{{ $searchQuery }}"
+                </h1>
+                <p class="mt-2 text-sm text-slate-600">
+                    Menampilkan produk yang sesuai dengan kata kunci pencarian
+                </p>
+            @else
+                <h1 class="text-3xl font-extrabold text-slate-900">Katalog Produk</h1>
+                <p class="mt-2 text-sm text-slate-600">
+                    Temukan keyboard mechanical dan aksesoris pilihan untuk setup impianmu
+                </p>
+            @endif
         </div>
 
         {{-- Main Content: Filter Sidebar + Product Grid --}}
@@ -29,6 +47,7 @@
                                     'max_price',
                                     'in_stock',
                                     'sort',
+                                    'q',
                                 ]);
                             @endphp
                             @if ($hasActiveFilters)
@@ -149,7 +168,8 @@
                         <select name="sort" id="sort" onchange="this.form.submit()"
                             class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400">
                             <option value="" {{ !request('sort') ? 'selected' : '' }}>Terbaru</option>
-                            <option value="price_asc" {{ request('sort') === 'price_asc' ? 'selected' : '' }}>Harga: Rendah
+                            <option value="price_asc" {{ request('sort') === 'price_asc' ? 'selected' : '' }}>Harga:
+                                Rendah
                                 ke Tinggi</option>
                             <option value="price_desc" {{ request('sort') === 'price_desc' ? 'selected' : '' }}>Harga:
                                 Tinggi ke Rendah</option>

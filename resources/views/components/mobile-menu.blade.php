@@ -13,6 +13,18 @@
         </div>
 
         <nav class="flex-1 overflow-y-auto px-4 py-3 text-sm">
+            {{-- Mobile Search --}}
+            <form action="{{ route('products.index') }}" method="GET" class="mb-4">
+                <label class="relative block">
+                    <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400 text-xs">
+                        🔍
+                    </span>
+                    <input type="text" name="q" placeholder="Cari produk..."
+                        class="w-full rounded-lg border border-gray-200 bg-white pl-8 pr-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        value="{{ request('q') }}" autocomplete="off">
+                </label>
+            </form>
+
             <a href="{{ url('/') }}" class="block px-2 py-2 rounded-md hover:bg-gray-50">
                 Beranda
             </a>

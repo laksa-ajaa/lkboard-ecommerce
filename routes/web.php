@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -26,6 +27,9 @@ Route::get('/register', fn() => view('pages.auth.register'))->name('register');
 Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
 Route::post('/logout', [LogoutController::class, 'store'])->name('logout');
+
+// Search
+Route::get('/api/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
 
 // Products
 Route::prefix('products')->name('products.')->controller(ProductController::class)->group(function () {

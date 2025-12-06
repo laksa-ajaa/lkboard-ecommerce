@@ -19,8 +19,20 @@ class ProductController extends Controller
             ->orderBy('name')
             ->get();
 
+        $searchQuery = request('q');
+
         $products = Product::with(['category'])
             ->where('status', 'active')
+            ->when($searchQuery, function ($query) use ($searchQuery) {
+                $query->where(function ($q) use ($searchQuery) {
+                    $q->where('name', 'like', '%' . $searchQuery . '%')
+                        ->orWhere('short_description', 'like', '%' . $searchQuery . '%')
+                        ->orWhere('description', 'like', '%' . $searchQuery . '%')
+                        ->orWhereHas('category', function ($categoryQuery) use ($searchQuery) {
+                            $categoryQuery->where('name', 'like', '%' . $searchQuery . '%');
+                        });
+                });
+            })
             ->when(request('category'), function ($query) {
                 $query->whereHas('category', function ($q) {
                     $q->where('slug', request('category'));
@@ -66,7 +78,7 @@ class ProductController extends Controller
         $minPrice = Product::where('status', 'active')->min('price') ?? 0;
         $maxPrice = Product::where('status', 'active')->max('price') ?? 10000000;
 
-        return view('pages.products.index', compact('categories', 'products', 'minPrice', 'maxPrice'));
+        return view('pages.products.index', compact('categories', 'products', 'minPrice', 'maxPrice', 'searchQuery'));
     }
 
     /**

@@ -38,17 +38,101 @@
             </nav>
 
             {{-- Search (desktop) --}}
-            <form action="{{ route('products.search') }}" method="GET" class="hidden lg:flex flex-1 max-w-md mx-2">
-                <label class="relative flex-1">
-                    <span
-                        class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-500 text-xs">
-                        🔍
-                    </span>
-                    <input type="text" name="q" placeholder="Cari keyboard, switch, atau keycaps..."
-                        class="w-full rounded-full border border-slate-300 bg-white/95 pl-8 pr-4 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        value="{{ request('q') }}">
-                </label>
-            </form>
+            <div x-data="searchDropdown()" class="hidden lg:flex flex-1 max-w-md mx-2 relative">
+                <form action="{{ route('products.index') }}" method="GET" class="relative flex-1">
+                    <label class="relative flex-1">
+                        <span
+                            class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-500 text-xs">
+                            🔍
+                        </span>
+                        <input type="text" name="q" placeholder="Cari keyboard, switch, atau keycaps..."
+                            x-model="query"
+                            @input.debounce.300ms="search()"
+                            @focus="showDropdown = true"
+                            @blur="setTimeout(() => showDropdown = false, 200)"
+                            @keydown.enter.prevent="submitSearch()"
+                            class="w-full rounded-lg border border-slate-300 bg-white/95 pl-8 pr-4 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            value="{{ request('q') }}" autocomplete="off">
+                    </label>
+                </form>
+
+                {{-- Dropdown Suggestions --}}
+                <div x-show="showDropdown && (suggestions.products.length > 0 || suggestions.categories.length > 0)"
+                    x-cloak
+                    x-transition
+                    class="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                    <template x-if="suggestions.categories.length > 0">
+                        <div class="p-2 border-b border-slate-100">
+                            <p class="px-2 py-1 text-[10px] font-semibold text-slate-500 uppercase">Kategori</p>
+                            <template x-for="category in suggestions.categories" :key="category.id">
+                                <a :href="`{{ url('/products/category') }}/${category.slug}`"
+                                    class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-50 text-xs text-slate-700">
+                                    <svg class="h-3 w-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                    </svg>
+                                    <span x-text="category.name"></span>
+                                </a>
+                            </template>
+                        </div>
+                    </template>
+                    <template x-if="suggestions.products.length > 0">
+                        <div class="p-2">
+                            <p class="px-2 py-1 text-[10px] font-semibold text-slate-500 uppercase">Produk</p>
+                            <template x-for="product in suggestions.products" :key="product.id">
+                                <a :href="`{{ url('/products') }}/${product.slug}`"
+                                    class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-50 text-xs">
+                                    <img :src="product.thumbnail || '/placeholder.png'" :alt="product.name"
+                                        class="h-8 w-8 rounded object-cover">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-medium text-slate-900 truncate" x-text="product.name"></p>
+                                        <p class="text-[10px] text-slate-500" x-text="product.category || ''"></p>
+                                    </div>
+                                </a>
+                            </template>
+                        </div>
+                    </template>
+                    <div class="p-2 border-t border-slate-100">
+                        <button type="button" @click="submitSearch()"
+                            class="w-full text-center text-xs font-medium text-indigo-600 hover:text-indigo-700 py-1">
+                            Lihat semua hasil untuk "<span x-text="query"></span>"
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function searchDropdown() {
+                    return {
+                        query: '{{ request('q') }}',
+                        showDropdown: false,
+                        suggestions: {
+                            products: [],
+                            categories: []
+                        },
+                        search() {
+                            if (this.query.length < 2) {
+                                this.suggestions = { products: [], categories: [] };
+                                return;
+                            }
+
+                            fetch(`{{ route('search.suggestions') }}?q=${encodeURIComponent(this.query)}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    this.suggestions = data;
+                                })
+                                .catch(error => {
+                                    console.error('Search error:', error);
+                                });
+                        },
+                        submitSearch() {
+                            if (this.query.trim()) {
+                                window.location.href = `{{ route('products.index') }}?q=${encodeURIComponent(this.query)}`;
+                            }
+                        }
+                    }
+                }
+            </script>
 
             {{-- Right actions --}}
             <div class="flex items-center gap-2">
