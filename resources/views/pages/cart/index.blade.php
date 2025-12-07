@@ -192,11 +192,9 @@
                     return;
                 }
                 
-                // Save selected items to sessionStorage to pass to checkout
-                sessionStorage.setItem('selectedCartItems', JSON.stringify(this.selectedItems));
-                
-                // Redirect to checkout
-                window.location.href = '{{ route('checkout.index') }}';
+                // Redirect to checkout with selected items as query parameter
+                const selectedItemsParam = encodeURIComponent(JSON.stringify(this.selectedItems));
+                window.location.href = '{{ route('checkout.index') }}?items=' + selectedItemsParam;
             }
         }">
         {{-- Breadcrumb --}}

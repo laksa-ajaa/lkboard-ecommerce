@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
@@ -50,9 +51,12 @@ Route::prefix('cart')->name('cart.')->middleware('auth')->controller(CartControl
     Route::delete('/clear', 'clear')->name('clear');
 });
 
-// Checkout
-Route::prefix('checkout')->name('checkout.')->group(function () {
-    Route::get('/', fn() => view('pages.checkout.index'))->name('index');
+// Checkout (requires authentication)
+Route::prefix('checkout')->name('checkout.')->middleware('auth')->controller(CheckoutController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::post('/', 'store')->name('store');
+    Route::put('/update-quantity/{id}', 'updateQuantity')->name('update-quantity');
+    Route::post('/save-address', 'saveAddress')->name('save-address');
     Route::get('/success', fn() => view('pages.checkout.success'))->name('success');
 });
 

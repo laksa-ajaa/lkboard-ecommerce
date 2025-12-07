@@ -60,4 +60,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Wishlist::class);
     }
+
+    /**
+     * Get the shipping addresses for the user.
+     */
+    public function shippingAddresses()
+    {
+        return $this->hasMany(ShippingAddress::class);
+    }
 }
