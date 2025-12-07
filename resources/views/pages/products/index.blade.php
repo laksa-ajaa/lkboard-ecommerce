@@ -123,13 +123,13 @@
                                 <div>
                                     <label for="min_price" class="block text-[11px] text-slate-500 mb-1">Min (Rp)</label>
                                     <input type="number" id="min_price" name="min_price"
-                                        value="{{ request('min_price', $minPrice) }}" min="0"
+                                        value="{{ request('min_price') }}" min="0" placeholder="Min"
                                         class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400">
                                 </div>
                                 <div>
                                     <label for="max_price" class="block text-[11px] text-slate-500 mb-1">Max (Rp)</label>
                                     <input type="number" id="max_price" name="max_price"
-                                        value="{{ request('max_price', $maxPrice) }}" min="0"
+                                        value="{{ request('max_price') }}" min="0" placeholder="Max"
                                         class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400">
                                 </div>
                             </div>
