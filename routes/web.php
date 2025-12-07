@@ -57,7 +57,16 @@ Route::prefix('checkout')->name('checkout.')->middleware('auth')->controller(Che
     Route::post('/', 'store')->name('store');
     Route::put('/update-quantity/{id}', 'updateQuantity')->name('update-quantity');
     Route::post('/save-address', 'saveAddress')->name('save-address');
+    Route::get('/payment/{order}', 'payment')->name('payment');
     Route::get('/success', fn() => view('pages.checkout.success'))->name('success');
+});
+
+// Midtrans callback routes (no auth required for notification)
+Route::prefix('checkout')->name('checkout.')->group(function () {
+    Route::post('/notification', [CheckoutController::class, 'notification'])->name('notification');
+    Route::get('/finish', [CheckoutController::class, 'finish'])->name('finish');
+    Route::get('/unfinish', [CheckoutController::class, 'unfinish'])->name('unfinish');
+    Route::get('/error', [CheckoutController::class, 'error'])->name('error');
 });
 
 // Wishlist (requires authentication)

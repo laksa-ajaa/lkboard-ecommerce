@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\ShippingAddress;
+use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class CheckoutController extends Controller
@@ -290,14 +294,252 @@ class CheckoutController extends Controller
         
         $total = $subtotal + $shippingCost;
 
-        // TODO: Create order in database
-        // For now, just redirect to success page with order data
+        // Generate order number
         $orderNumber = 'ORD-' . strtoupper(uniqid());
 
-        return redirect()->route('checkout.success')
-            ->with('order_number', $orderNumber)
-            ->with('order_total', $total)
-            ->with('success', 'Pesanan Anda berhasil dibuat!');
+        try {
+            DB::beginTransaction();
+
+            // Create order
+            $order = Order::create([
+                'user_id' => $user->id,
+                'order_number' => $orderNumber,
+                'status' => 'pending',
+                'payment_method' => $validated['payment_method'],
+                'payment_status' => 'pending',
+                'subtotal' => $subtotal,
+                'shipping_cost' => $shippingCost,
+                'total' => $total,
+                'shipping_name' => $validated['name'],
+                'shipping_email' => $validated['email'],
+                'shipping_phone' => $validated['phone'],
+                'shipping_address' => $validated['address'],
+                'shipping_city' => $validated['city'],
+                'shipping_province' => $validated['province'],
+                'shipping_postal_code' => $validated['postal_code'],
+            ]);
+
+            // Create order items
+            foreach ($cartItems as $cartItem) {
+                $shippingMethod = $validated['shipping_method'][$cartItem->id] ?? 'standard';
+                
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $cartItem->product_id,
+                    'variant_id' => $cartItem->variant_id,
+                    'quantity' => $cartItem->quantity,
+                    'price' => $cartItem->price,
+                    'shipping_method' => $shippingMethod,
+                ]);
+            }
+
+            // Generate Midtrans snap token if payment method is not COD
+            if ($validated['payment_method'] !== 'cod') {
+                $midtransService = new MidtransService();
+                $snapToken = $midtransService->getSnapToken($order);
+                
+                $order->update([
+                    'midtrans_snap_token' => $snapToken,
+                    'midtrans_order_id' => $orderNumber,
+                ]);
+            }
+
+            DB::commit();
+
+            // For COD, redirect to success page
+            if ($validated['payment_method'] === 'cod') {
+                // Clear cart items that were ordered
+                foreach ($cartItems as $cartItem) {
+                    $cartItem->delete();
+                }
+
+                return redirect()->route('checkout.success')
+                    ->with('order_number', $orderNumber)
+                    ->with('order_total', $total)
+                    ->with('success', 'Pesanan Anda berhasil dibuat!');
+            }
+
+            // For other payment methods, redirect to payment page
+            return redirect()->route('checkout.payment', ['order' => $order->id])
+                ->with('order_number', $orderNumber);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat membuat pesanan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show payment page with Midtrans snap.
+     */
+    public function payment(Order $order): View
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if ($order->payment_status === 'paid') {
+            return redirect()->route('checkout.success')
+                ->with('order_number', $order->order_number)
+                ->with('order_total', $order->total)
+                ->with('success', 'Pesanan Anda sudah dibayar!');
+        }
+
+        // Generate snap token if not exists and payment is not COD
+        if ($order->payment_method !== 'cod' && !$order->midtrans_snap_token) {
+            try {
+                $midtransService = new MidtransService();
+                $snapToken = $midtransService->getSnapToken($order);
+                $order->update(['midtrans_snap_token' => $snapToken]);
+            } catch (\Exception $e) {
+                return redirect()->route('checkout.index')
+                    ->with('error', 'Gagal membuat token pembayaran: ' . $e->getMessage());
+            }
+        }
+
+        return view('pages.checkout.payment', [
+            'order' => $order->load(['items.product', 'items.variant']),
+        ]);
+    }
+
+    /**
+     * Handle Midtrans notification/callback.
+     */
+    public function notification(Request $request): JsonResponse
+    {
+        try {
+            $notification = new \Midtrans\Notification();
+            
+            $orderNumber = $notification->order_id;
+            $transactionStatus = $notification->transaction_status;
+            $fraudStatus = $notification->fraud_status ?? null;
+            
+            $order = Order::where('order_number', $orderNumber)->first();
+            
+            if (!$order) {
+                return response()->json(['message' => 'Order not found'], 404);
+            }
+
+            // Update order based on transaction status
+            if ($transactionStatus == 'capture') {
+                if ($fraudStatus == 'challenge') {
+                    $order->update(['payment_status' => 'challenge']);
+                } else if ($fraudStatus == 'accept') {
+                    $order->update([
+                        'payment_status' => 'paid',
+                        'midtrans_transaction_id' => $notification->transaction_id,
+                        'midtrans_response' => $notification->getResponse(),
+                    ]);
+                    
+                    // Clear cart items
+                    $cart = $order->user->cart;
+                    if ($cart) {
+                        $cart->items()->delete();
+                    }
+                }
+            } else if ($transactionStatus == 'settlement') {
+                $order->update([
+                    'payment_status' => 'paid',
+                    'midtrans_transaction_id' => $notification->transaction_id,
+                    'midtrans_response' => $notification->getResponse(),
+                ]);
+                
+                // Clear cart items
+                $cart = $order->user->cart;
+                if ($cart) {
+                    $cart->items()->delete();
+                }
+            } else if ($transactionStatus == 'pending') {
+                $order->update(['payment_status' => 'pending']);
+            } else if ($transactionStatus == 'deny' || $transactionStatus == 'expire' || $transactionStatus == 'cancel') {
+                $order->update([
+                    'payment_status' => 'failed',
+                    'midtrans_response' => $notification->getResponse(),
+                ]);
+            }
+
+            return response()->json(['message' => 'Notification processed']);
+            
+        } catch (\Exception $e) {
+            \Log::error('Midtrans notification error: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Handle payment finish redirect.
+     */
+    public function finish(Request $request)
+    {
+        $orderId = $request->get('order_id');
+        
+        if (!$orderId) {
+            return redirect()->route('checkout.index')
+                ->with('error', 'Order ID tidak ditemukan.');
+        }
+
+        $order = Order::where('order_number', $orderId)->first();
+        
+        if (!$order) {
+            return redirect()->route('checkout.index')
+                ->with('error', 'Pesanan tidak ditemukan.');
+        }
+
+        // Check payment status
+        if ($order->payment_status === 'paid') {
+            return redirect()->route('checkout.success')
+                ->with('order_number', $order->order_number)
+                ->with('order_total', $order->total)
+                ->with('success', 'Pembayaran berhasil!');
+        }
+
+        return redirect()->route('checkout.payment', ['order' => $order->id])
+            ->with('info', 'Menunggu konfirmasi pembayaran...');
+    }
+
+    /**
+     * Handle payment unfinish redirect.
+     */
+    public function unfinish(Request $request)
+    {
+        $orderId = $request->get('order_id');
+        
+        if ($orderId) {
+            $order = Order::where('order_number', $orderId)->first();
+            
+            if ($order) {
+                return redirect()->route('checkout.payment', ['order' => $order->id])
+                    ->with('error', 'Pembayaran belum selesai. Silakan coba lagi.');
+            }
+        }
+
+        return redirect()->route('checkout.index')
+            ->with('error', 'Pembayaran belum selesai. Silakan coba lagi.');
+    }
+
+    /**
+     * Handle payment error redirect.
+     */
+    public function error(Request $request)
+    {
+        $orderId = $request->get('order_id');
+        
+        if ($orderId) {
+            $order = Order::where('order_number', $orderId)->first();
+            
+            if ($order) {
+                $order->update(['payment_status' => 'failed']);
+                
+                return redirect()->route('checkout.payment', ['order' => $order->id])
+                    ->with('error', 'Pembayaran gagal. Silakan coba lagi atau gunakan metode pembayaran lain.');
+            }
+        }
+
+        return redirect()->route('checkout.index')
+            ->with('error', 'Pembayaran gagal. Silakan coba lagi.');
     }
 }
 
