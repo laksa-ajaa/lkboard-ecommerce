@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -200,7 +201,16 @@ class ProductController extends Controller
                 return $product;
             });
 
-        return view('pages.products.show', compact('productModel', 'similarProducts'));
+        // Check if product is in user's wishlist
+        $isInWishlist = false;
+        if (Auth::check()) {
+            $isInWishlist = Auth::user()
+                ->wishlists()
+                ->where('product_id', $productModel->id)
+                ->exists();
+        }
+
+        return view('pages.products.show', compact('productModel', 'similarProducts', 'isInWishlist'));
     }
 }
 

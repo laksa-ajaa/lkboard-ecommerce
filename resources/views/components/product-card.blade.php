@@ -4,10 +4,9 @@
     $productParam = $product->slug ?? ($product->id ?? null);
 @endphp
 
-<div
-    class="group flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden hover:-translate-y-1 hover:border-indigo-200 hover:shadow-[0_18px_55px_rgba(15,23,42,0.18)] transition-all duration-300">
-    <a href="{{ $productParam ? route('products.show', $productParam) : '#' }}"
-        class="relative block aspect-[4/3] bg-slate-900 overflow-hidden">
+<a href="{{ $productParam ? route('products.show', $productParam) : '#' }}"
+    class="group flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden hover:-translate-y-1 hover:border-indigo-200 hover:shadow-[0_18px_55px_rgba(15,23,42,0.18)] transition-all duration-300 cursor-pointer">
+    <div class="relative block aspect-[4/3] bg-slate-900 overflow-hidden">
         @if (!empty($product->image_url))
             <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
                 class="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500">
@@ -38,13 +37,12 @@
                 </span>
             </div>
         @endif
-    </a>
+    </div>
 
     <div class="flex flex-1 flex-col px-3 pt-3 pb-3">
-        <a href="{{ $productParam ? route('products.show', $productParam) : '#' }}"
-            class="text-sm font-semibold text-slate-900 line-clamp-2 tracking-tight">
+        <h3 class="text-sm font-semibold text-slate-900 line-clamp-2 tracking-tight">
             {{ $product->name }}
-        </a>
+        </h3>
         @if (!empty($product->category?->name))
             <p class="mt-0.5 text-[11px] text-slate-500">
                 {{ $product->category->name }}
@@ -68,4 +66,4 @@
             @endif
         </div>
     </div>
-</div>
+</a>

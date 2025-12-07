@@ -52,4 +52,12 @@ class User extends Authenticatable
     {
         return $this->hasOne(Cart::class);
     }
+
+    /**
+     * Get the wishlists for the user.
+     */
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
 }

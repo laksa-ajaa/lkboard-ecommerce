@@ -27,6 +27,8 @@
             showErrorAlert: false,
             showLoginModal: false,
             isAuthenticated: {{ auth()->check() ? 'true' : 'false' }},
+            isInWishlist: {{ $isInWishlist ? 'true' : 'false' }},
+            isTogglingWishlist: false,
             variants: [
                 @foreach ($productModel->variants as $variant)
                     { id: {{ $variant->id }}, stock: {{ $variant->stock }}, name: '{{ $variant->name }}' }, @endforeach
@@ -42,6 +44,61 @@
                 } else if (this.quantity > this.getMaxStock()) {
                     this.quantity = this.getMaxStock();
                 }
+            },
+            toggleWishlist() {
+                // Cek apakah user sudah login
+                if (!this.isAuthenticated) {
+                    this.showLoginModal = true;
+                    return;
+                }
+        
+                // Prevent multiple simultaneous requests
+                if (this.isTogglingWishlist) return;
+        
+                this.isTogglingWishlist = true;
+        
+                const formData = {
+                    product_id: {{ $productModel->id }},
+                    _token: '{{ csrf_token() }}'
+                };
+        
+                fetch('{{ route('wishlist.toggle') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(async response => {
+                        // Handle 401/403 (Unauthorized) - show login modal
+                        if (response.status === 401 || response.status === 403) {
+                            this.showLoginModal = true;
+                            this.isTogglingWishlist = false;
+                            return;
+                        }
+        
+                        // Check if response is ok
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({}));
+                            alert(errorData.message || 'Terjadi kesalahan saat mengubah wishlist');
+                            this.isTogglingWishlist = false;
+                            return;
+                        }
+        
+                        const data = await response.json();
+                        if (data.success) {
+                            this.isInWishlist = data.in_wishlist;
+                        } else {
+                            alert(data.message || 'Terjadi kesalahan saat mengubah wishlist');
+                        }
+                        this.isTogglingWishlist = false;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat mengubah wishlist. Silakan coba lagi.');
+                        this.isTogglingWishlist = false;
+                    });
             },
             addToCart() {
                 // Cek apakah user sudah login
@@ -313,13 +370,26 @@
 
                 {{-- Wishlist Button --}}
                 <div>
-                    <button type="button"
-                        class="inline-flex items-center gap-2 rounded-lg border border-indigo-500 bg-white px-4 py-2.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="button" @click="toggleWishlist()" :disabled="isTogglingWishlist"
+                        class="group relative inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        :class="isInWishlist ?
+                            'border-rose-500 bg-rose-50 text-rose-600 hover:bg-rose-100' :
+                            'border-indigo-500 bg-white text-indigo-600 hover:bg-indigo-50'"
+                        :title="isInWishlist ? 'Hapus Wishlist' : 'Tambah ke Wishlist'">
+                        {{-- Empty Heart Icon --}}
+                        <svg x-show="!isInWishlist" class="h-5 w-5" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
-                        Tambah ke Wishlist
+                        {{-- Filled Heart Icon --}}
+                        <svg x-show="isInWishlist" x-cloak class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        <span x-show="!isInWishlist">Tambah ke Wishlist</span>
+                        <span class="group-hover:hidden" x-show="isInWishlist" x-cloak>Wishlist</span>
+                        <span class="hidden group-hover:inline" x-show="isInWishlist" x-cloak>Hapus Wishlist</span>
                     </button>
                 </div>
 
@@ -468,11 +538,11 @@
 
                             <div class="space-y-2">
                                 <button type="button" @click="addToCart()"
-                                    class="w-full rounded-lg bg-indigo-500 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-400 transition-colors shadow-sm shadow-indigo-500/40">
+                                    class="w-full rounded-lg bg-indigo-500 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-400 transition-colors shadow-sm shadow-indigo-500/40 cursor-pointer">
                                     Tambah ke Keranjang
                                 </button>
                                 <button type="button"
-                                    class="w-full rounded-lg border border-indigo-500 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors">
+                                    class="w-full rounded-lg border border-indigo-500 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer">
                                     Beli Langsung
                                 </button>
                             </div>

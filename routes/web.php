@@ -7,6 +7,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -55,9 +56,11 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::get('/success', fn() => view('pages.checkout.success'))->name('success');
 });
 
-// Wishlist
-Route::prefix('wishlist')->name('wishlist.')->group(function () {
-    Route::get('/', fn() => view('pages.wishlist.index'))->name('index');
+// Wishlist (requires authentication)
+Route::prefix('wishlist')->name('wishlist.')->middleware('auth')->controller(WishlistController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::post('/toggle', 'toggle')->name('toggle');
+    Route::delete('/{id}', 'destroy')->name('destroy');
 });
 
 // Account
