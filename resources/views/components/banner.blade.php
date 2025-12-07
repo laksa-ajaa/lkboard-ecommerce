@@ -54,9 +54,9 @@
                     class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(129,140,248,0.3),transparent_60%),radial-gradient(circle_at_bottom,rgba(56,189,248,0.3),transparent_55%)] opacity-40">
                 </div>
 
-                {{-- Hero image from storage --}}
+                {{-- Hero image from assets --}}
                 <div class="relative z-10 h-full w-full">
-                    <img src="{{ asset('storage/hero/hero.png') }}" alt="LKBoard hero"
+                    <img src="{{ asset('assets/img/hero.png') }}" alt="LKBoard hero"
                         class="h-full w-full object-cover object-center" loading="lazy">
                 </div>
 

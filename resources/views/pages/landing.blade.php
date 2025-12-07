@@ -101,7 +101,7 @@
                         <ul class="space-y-2 text-xs text-slate-500">
                             <li>📍 Koordinat: 3.517367882399484, 98.673248005966</li>
                             <li>🕒 Jam buka: Senin–Minggu 10.00–20.00 WIB</li>
-                            <li>📞 Reservasi sesi private: +62 812-3456-7890</li>
+                            <li>📞 Reservasi sesi private: +62 815-3518-426</li>
                         </ul>
                         <a target="_blank" rel="noopener"
                             href="https://maps.google.com/?q=3.517367882399484,98.673248005966"
@@ -142,8 +142,8 @@
                         <div class="grid gap-4 sm:grid-cols-2 text-sm">
                             <div class="rounded-xl border border-slate-100 bg-white p-4 shadow">
                                 <p class="text-xs text-slate-400">WhatsApp</p>
-                                <p class="text-base font-semibold text-slate-900 mt-1">+62 812-3456-7890</p>
-                                <a href="https://wa.me/6281234567890"
+                                <p class="text-base font-semibold text-slate-900 mt-1">+62 815-3518-426</p>
+                                <a href="https://wa.me/628153518426"
                                     class="mt-2 inline-flex items-center gap-1 rounded-full bg-indigo-500 px-4 py-1.5 text-[11px] font-semibold text-white hover:bg-indigo-400 transition">
                                     <span>Chat sekarang</span>
 
@@ -151,8 +151,8 @@
                             </div>
                             <div class="rounded-xl border border-slate-100 bg-white p-4 shadow">
                                 <p class="text-xs text-slate-400">Email Support</p>
-                                <p class="text-base font-semibold text-slate-900 mt-1">support@lkboard.id</p>
-                                <a href="mailto:support@lkboard.id"
+                                <p class="text-base font-semibold text-slate-900 mt-1">lkboard@laksaajaa.my.id</p>
+                                <a href="mailto:lkboard@laksaajaa.my.id"
                                     class="mt-2 inline-flex items-center gap-1 rounded-full bg-indigo-500 px-4 py-1.5 text-[11px] font-semibold text-white hover:bg-indigo-400 transition">
                                     <span>Kirim email</span>
 
@@ -161,7 +161,7 @@
 
                         </div>
                     </div>
-                    <form action="mailto:support@lkboard.id" method="POST" enctype="text/plain"
+                    <form action="mailto:lkboard@laksaajaa.my.id" method="POST" enctype="text/plain"
                         class="space-y-4 rounded-xl border border-slate-100 bg-white p-6 text-sm shadow">
                         <div>
                             <label for="contact-name" class="text-xs uppercase tracking-[0.2em] text-slate-500">Nama

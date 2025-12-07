@@ -310,7 +310,7 @@
 
                     <h3 class="text-lg font-bold text-slate-900 text-center mb-2">Login Diperlukan</h3>
                     <p class="text-sm text-slate-600 text-center mb-6">
-                        Anda perlu masuk terlebih dahulu untuk menambahkan produk ke keranjang.
+                        Anda perlu masuk terlebih dahulu untuk melanjutkan pembelian.
                     </p>
 
                     {{-- Actions --}}
@@ -346,10 +346,10 @@
                         @if ($productModel->badge || $productModel->discount)
                             <div class="absolute top-4 left-4 flex gap-2">
                                 @if ($productModel->badge)
-                                    <x-badge variant="primary">{{ $productModel->badge }}</x-badge>
+                                    <x-badge variant="primary" solid>{{ $productModel->badge }}</x-badge>
                                 @endif
                                 @if ($productModel->discount)
-                                    <x-badge variant="danger">-{{ $productModel->discount }}%</x-badge>
+                                    <x-badge variant="danger" solid>-{{ $productModel->discount }}%</x-badge>
                                 @endif
                             </div>
                         @endif

@@ -6,10 +6,8 @@
         <div class="w-full max-w-sm bg-white rounded-2xl border border-slate-200/90 p-8 shadow-md shadow-slate-900/10">
 
             <div class="flex items-center justify-center gap-2 mb-4">
-                <span
-                    class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500 text-white text-sm font-bold shadow-sm shadow-indigo-500/40">
-                    LK
-                </span>
+                <img src="{{ asset('assets/img/logo.jpg') }}" alt="LKBoard Logo"
+                    class="h-8 w-8 rounded-md object-cover shadow-sm shadow-indigo-500/40">
                 <div class="flex flex-col">
                     <span class="text-sm font-semibold tracking-tight text-slate-900">
                         LKBoard

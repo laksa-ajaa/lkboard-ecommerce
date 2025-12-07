@@ -18,11 +18,11 @@
 
         @if (!empty($product->badge))
             <div class="absolute left-3 top-3 flex gap-1">
-                <x-badge variant="primary">
+                <x-badge variant="primary" solid>
                     {{ $product->badge }}
                 </x-badge>
                 @if (!empty($product->discount))
-                    <x-badge variant="danger">
+                    <x-badge variant="danger" solid>
                         -{{ $product->discount }}%
                     </x-badge>
                 @endif

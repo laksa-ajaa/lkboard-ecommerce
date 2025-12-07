@@ -3,10 +3,7 @@
         <div class="flex items-center justify-between h-16 gap-4">
             {{-- Logo --}}
             <a href="{{ url('/') }}" class="flex items-center gap-2">
-                <span
-                    class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500 text-white text-sm font-bold shadow-sm shadow-indigo-500/50">
-                    LK
-                </span>
+                <img src="{{ asset('assets/img/logo.jpg') }}" alt="LKBoard Logo" class="h-8 w-8 rounded-md object-cover shadow-sm shadow-indigo-500/50">
                 <div class="flex flex-col">
                     <span class="text-sm font-semibold tracking-tight text-slate-50">
                         LKBoard
