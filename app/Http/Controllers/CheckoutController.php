@@ -563,6 +563,7 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.success')
                 ->with('order_number', $order->order_number)
                 ->with('order_total', $order->total)
+                ->with('payment_status', $order->payment_status)
                 ->with('success', 'Pesanan Anda sudah dibayar!');
         }
 
@@ -571,7 +572,8 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.failed')
                 ->with('expired', $order->payment_status === 'expired')
                 ->with('order_number', $order->order_number)
-                ->with('order_total', $order->total);
+                ->with('order_total', $order->total)
+                ->with('payment_status', $order->payment_status);
         }
 
         // Generate snap token if not exists
@@ -952,7 +954,8 @@ class CheckoutController extends Controller
                     return redirect()->route('checkout.success')
                         ->with('success', 'Pembayaran berhasil! Terima kasih atas pesanan Anda.')
                         ->with('order_number', $order->order_number)
-                        ->with('order_total', $order->total);
+                        ->with('order_total', $order->total)
+                        ->with('payment_status', $order->payment_status);
                 }
             } else if ($transactionStatus == 'settlement') {
                 // Payment successful via other methods (VA, e-wallet, etc)
@@ -981,7 +984,8 @@ class CheckoutController extends Controller
                 return redirect()->route('checkout.success')
                     ->with('success', 'Pembayaran berhasil! Terima kasih atas pesanan Anda.')
                     ->with('order_number', $order->order_number)
-                    ->with('order_total', $order->total);
+                    ->with('order_total', $order->total)
+                    ->with('payment_status', $order->payment_status);
             } else if ($transactionStatus == 'pending') {
                 // Update pending status if not already set
                 if ($order->payment_status !== 'pending') {

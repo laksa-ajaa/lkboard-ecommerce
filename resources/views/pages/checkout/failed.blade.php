@@ -9,20 +9,19 @@
             {{-- Failed Icon --}}
             <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-rose-100">
                 <svg class="h-10 w-10 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </div>
 
             <h1 class="mb-4 text-3xl font-extrabold text-slate-900">
-                @if(session('expired'))
+                @if (session('expired'))
                     Pembayaran Kadaluarsa
                 @else
                     Pembayaran Gagal
                 @endif
             </h1>
             <p class="mb-8 text-lg text-slate-600">
-                @if(session('expired'))
+                @if (session('expired'))
                     Kami tidak menerima pembayaran tepat waktu. Silakan buat pesanan baru untuk melanjutkan.
                 @else
                     Terjadi kesalahan saat memproses pembayaran Anda. Silakan coba lagi atau gunakan metode pembayaran lain.
@@ -30,25 +29,42 @@
             </p>
 
             {{-- Order Info Card --}}
-            @if(session('order_number'))
+            @if (session('order_number'))
                 <div class="mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div class="mb-4 flex items-center justify-between border-b border-slate-200 pb-4">
                         <span class="text-sm font-medium text-slate-600">Nomor Pesanan</span>
                         <span class="text-lg font-bold text-slate-900">#{{ session('order_number') }}</span>
                     </div>
-                    
+
                     <div class="space-y-3 text-left">
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-slate-600">Status</span>
-                            <span class="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">
-                                @if(session('expired'))
-                                    Kadaluarsa
-                                @else
-                                    Gagal
-                                @endif
+                            @php
+                                $paymentStatus = session('payment_status', session('expired') ? 'expired' : 'failed');
+                                $paymentColors = [
+                                    'pending' => 'bg-amber-100 text-amber-700',
+                                    'paid' => 'bg-emerald-100 text-emerald-700',
+                                    'failed' => 'bg-red-100 text-red-700',
+                                    'expired' => 'bg-gray-100 text-gray-700',
+                                    'cancelled' => 'bg-red-100 text-red-700',
+                                    'challenge' => 'bg-yellow-100 text-yellow-700',
+                                ];
+                                $paymentLabels = [
+                                    'pending' => 'Menunggu Pembayaran',
+                                    'paid' => 'Lunas',
+                                    'failed' => 'Gagal',
+                                    'expired' => 'Kedaluwarsa',
+                                    'cancelled' => 'Dibatalkan',
+                                    'challenge' => 'Menunggu Verifikasi',
+                                ];
+                                $statusColor = $paymentColors[$paymentStatus] ?? 'bg-red-100 text-red-700';
+                                $statusLabel = $paymentLabels[$paymentStatus] ?? ucfirst($paymentStatus);
+                            @endphp
+                            <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $statusColor }}">
+                                {{ $statusLabel }}
                             </span>
                         </div>
-                        @if(session('order_total'))
+                        @if (session('order_total'))
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-slate-600">Total Pembayaran</span>
                                 <span class="text-lg font-bold text-slate-900">
@@ -70,17 +86,21 @@
                     </svg>
                     <div class="text-left">
                         <h3 class="font-semibold text-amber-900">
-                            @if(session('expired'))
+                            @if (session('expired'))
                                 Mengapa Pembayaran Kadaluarsa?
                             @else
                                 Mengapa Pembayaran Gagal?
                             @endif
                         </h3>
                         <p class="mt-2 text-sm text-amber-800">
-                            @if(session('expired'))
-                                Transaksi pembayaran memiliki batas waktu. Jika pembayaran tidak dilakukan dalam waktu yang ditentukan, transaksi akan otomatis kadaluarsa. Silakan buat pesanan baru dan selesaikan pembayaran sebelum batas waktu habis.
+                            @if (session('expired'))
+                                Transaksi pembayaran memiliki batas waktu. Jika pembayaran tidak dilakukan dalam waktu yang
+                                ditentukan, transaksi akan otomatis kadaluarsa. Silakan buat pesanan baru dan selesaikan
+                                pembayaran sebelum batas waktu habis.
                             @else
-                                Pembayaran Anda gagal diproses. Hal ini bisa terjadi karena beberapa alasan, seperti saldo tidak mencukupi, kartu kredit ditolak, atau masalah teknis. Silakan coba lagi dengan metode pembayaran lain atau hubungi bank/kartu Anda untuk informasi lebih lanjut.
+                                Pembayaran Anda gagal diproses. Hal ini bisa terjadi karena beberapa alasan, seperti saldo
+                                tidak mencukupi, kartu kredit ditolak, atau masalah teknis. Silakan coba lagi dengan metode
+                                pembayaran lain atau hubungi bank/kartu Anda untuk informasi lebih lanjut.
                             @endif
                         </p>
                     </div>
@@ -91,7 +111,7 @@
             <div class="mb-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
                 <h2 class="mb-4 text-lg font-semibold text-slate-900">Langkah Selanjutnya</h2>
                 <div class="space-y-4 text-left">
-                    @if(session('expired'))
+                    @if (session('expired'))
                         <div class="flex gap-4">
                             <div
                                 class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-600">
@@ -161,7 +181,7 @@
 
             {{-- Actions --}}
             <div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
-                @if(session('expired'))
+                @if (session('expired'))
                     <a href="{{ route('cart.index') }}"
                         class="inline-flex items-center justify-center rounded-lg border border-indigo-500 bg-white px-6 py-3 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors">
                         Kembali ke Keranjang
@@ -199,4 +219,3 @@
         </div>
     </div>
 @endsection
-
