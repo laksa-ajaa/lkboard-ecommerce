@@ -36,10 +36,6 @@ Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
 Route::post('/logout', [LogoutController::class, 'store'])->name('logout');
 
-// Google OAuth
-Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('google.redirect');
-Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
-
 // Search
 Route::get('/api/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
 
