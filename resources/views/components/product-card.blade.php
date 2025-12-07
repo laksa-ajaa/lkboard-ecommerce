@@ -57,21 +57,15 @@
             </p>
         @endif
 
-        <div class="mt-3 flex items-end justify-between">
-            <div>
-                <p class="text-sm font-semibold text-indigo-600">
-                    Rp {{ number_format($product->price, 0, ',', '.') }}
+        <div class="mt-3">
+            <p class="text-sm font-semibold text-indigo-600">
+                Rp {{ number_format($product->price, 0, ',', '.') }}
+            </p>
+            @if (!empty($product->original_price) && $product->original_price > $product->price)
+                <p class="text-[11px] text-slate-500 line-through">
+                    Rp {{ number_format($product->original_price, 0, ',', '.') }}
                 </p>
-                @if (!empty($product->original_price) && $product->original_price > $product->price)
-                    <p class="text-[11px] text-slate-500 line-through">
-                        Rp {{ number_format($product->original_price, 0, ',', '.') }}
-                    </p>
-                @endif
-            </div>
-            <button type="button"
-                class="inline-flex items-center justify-center rounded-full bg-indigo-500 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-indigo-400 transition-colors shadow-sm shadow-indigo-500/40">
-                Tambah ke Keranjang
-            </button>
+            @endif
         </div>
     </div>
 </div>

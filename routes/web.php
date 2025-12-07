@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
@@ -39,9 +40,13 @@ Route::prefix('products')->name('products.')->controller(ProductController::clas
     Route::get('/{product}', 'show')->name('show');
 });
 
-// Cart
-Route::prefix('cart')->name('cart.')->group(function () {
-    Route::get('/', fn() => view('pages.cart.index'))->name('index');
+// Cart (requires authentication)
+Route::prefix('cart')->name('cart.')->middleware('auth')->controller(CartController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::post('/add', 'add')->name('add');
+    Route::put('/update/{id}', 'update')->name('update');
+    Route::delete('/remove/{id}', 'remove')->name('remove');
+    Route::delete('/clear', 'clear')->name('clear');
 });
 
 // Checkout

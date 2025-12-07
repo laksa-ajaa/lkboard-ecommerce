@@ -158,7 +158,49 @@ class ProductController extends Controller
      */
     public function show(string $product): View
     {
-        return view('pages.products.show', compact('product'));
+        $productModel = Product::with(['category', 'variants'])
+            ->where('slug', $product)
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        // Calculate discount if exists
+        $productModel->original_price = $productModel->compare_at_price;
+        $productModel->discount = $productModel->compare_at_price && $productModel->compare_at_price > $productModel->price
+            ? (int) round((($productModel->compare_at_price - $productModel->price) / $productModel->compare_at_price) * 100)
+            : null;
+        $productModel->image_url = $productModel->thumbnail;
+
+        // Transform variants
+        $productModel->variants->transform(function ($variant) use ($productModel) {
+            // Use variant price if exists, otherwise use product price
+            $variantPrice = $variant->price ?? $productModel->price;
+            $variantComparePrice = $variant->compare_at_price ?? $productModel->compare_at_price;
+            
+            $variant->original_price = $variantComparePrice;
+            $variant->discount = $variantComparePrice && $variantComparePrice > $variantPrice
+                ? (int) round((($variantComparePrice - $variantPrice) / $variantComparePrice) * 100)
+                : null;
+            return $variant;
+        });
+
+        // Get similar products (same category, exclude current product)
+        $similarProducts = Product::with(['category'])
+            ->where('status', 'active')
+            ->where('category_id', $productModel->category_id)
+            ->where('id', '!=', $productModel->id)
+            ->latest()
+            ->take(4)
+            ->get()
+            ->map(function ($product) {
+                $product->original_price = $product->compare_at_price;
+                $product->discount = $product->compare_at_price && $product->compare_at_price > $product->price
+                    ? (int) round((($product->compare_at_price - $product->price) / $product->compare_at_price) * 100)
+                    : null;
+                $product->image_url = $product->thumbnail;
+                return $product;
+            });
+
+        return view('pages.products.show', compact('productModel', 'similarProducts'));
     }
 }
 

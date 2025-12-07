@@ -27,10 +27,17 @@
                     class="inline-flex items-center gap-1 border-b-2 pb-1 transition-colors border-transparent hover:border-indigo-400 hover:text-white @if (request()->routeIs('products.*')) border-indigo-400 text-white @endif">
                     <span>Produk</span>
                 </a>
-                <a href="{{ route('cart.index') }}"
-                    class="inline-flex items-center gap-1 border-b-2 pb-1 transition-colors border-transparent hover:border-indigo-400 hover:text-white @if (request()->routeIs('cart.*')) border-indigo-400 text-white @endif">
-                    <span>Keranjang Saya</span>
-                </a>
+                @auth
+                    <a href="{{ route('cart.index') }}"
+                        class="inline-flex items-center gap-1 border-b-2 pb-1 transition-colors border-transparent hover:border-indigo-400 hover:text-white @if (request()->routeIs('cart.*')) border-indigo-400 text-white @endif">
+                        <span>Keranjang Saya</span>
+                    </a>
+                @else
+                    <button type="button" @click="showLoginModal = true"
+                        class="inline-flex items-center gap-1 border-b-2 pb-1 transition-colors border-transparent hover:border-indigo-400 hover:text-white">
+                        <span>Keranjang Saya</span>
+                    </button>
+                @endauth
                 <a href="#about"
                     class="inline-flex items-center gap-1 border-b-2 pb-1 transition-colors border-transparent hover:border-indigo-400 hover:text-white @if (request()->routeIs('login')) border-indigo-400 text-white @endif">
                     <span>Tentang Kami</span>
@@ -140,11 +147,18 @@
                     class="hidden sm:inline-flex relative h-8 px-3 items-center justify-center rounded-lg border border-slate-800 bg-slate-900/70 text-sm text-slate-300 hover:text-white hover:border-indigo-500 hover:bg-slate-900 transition-colors">
                     ♥
                 </a>
-                <a href="{{ route('cart.index') }}"
-                    class="relative inline-flex h-8 px-3 items-center justify-center rounded-lg border border-slate-800 bg-slate-900/70 text-sm text-slate-200 hover:text-white hover:border-indigo-500 hover:bg-slate-900 transition-colors">
-                    🛒
-                    {{-- Badge jumlah cart bisa ditambahkan di sini --}}
-                </a>
+                @auth
+                    <a href="{{ route('cart.index') }}"
+                        class="relative inline-flex h-8 px-3 items-center justify-center rounded-lg border border-slate-800 bg-slate-900/70 text-sm text-slate-200 hover:text-white hover:border-indigo-500 hover:bg-slate-900 transition-colors">
+                        🛒
+                        {{-- Badge jumlah cart bisa ditambahkan di sini --}}
+                    </a>
+                @else
+                    <button type="button" @click="showLoginModal = true"
+                        class="relative inline-flex h-8 px-3 items-center justify-center rounded-lg border border-slate-800 bg-slate-900/70 text-sm text-slate-200 hover:text-white hover:border-indigo-500 hover:bg-slate-900 transition-colors">
+                        🛒
+                    </button>
+                @endauth
 
                 @auth
                     <div x-data="{ open: false }" class="relative hidden sm:block">

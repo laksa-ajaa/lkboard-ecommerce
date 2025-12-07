@@ -9,9 +9,16 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
-<body class="min-h-screen bg-[#f9f5ee] text-gray-900">
+<body class="min-h-screen bg-[#f9f5ee] text-gray-900" 
+    x-data="{ 
+        showLoginModal: false,
+        isAuthenticated: {{ auth()->check() ? 'true' : 'false' }}
+    }">
     {{-- Navbar --}}
     @include('components.navbar')
+    
+    {{-- Global Login Modal --}}
+    @include('components.login-modal')
 
     {{-- Flash message / alert global --}}
     <div class="container mx-auto px-4 mt-4">

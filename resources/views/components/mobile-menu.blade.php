@@ -31,9 +31,16 @@
             <a href="{{ route('products.index') }}" class="block px-2 py-2 rounded-md hover:bg-gray-50">
                 Produk
             </a>
-            <a href="{{ route('cart.index') }}" class="block px-2 py-2 rounded-md hover:bg-gray-50">
-                Keranjang
-            </a>
+            @auth
+                <a href="{{ route('cart.index') }}" class="block px-2 py-2 rounded-md hover:bg-gray-50">
+                    Keranjang
+                </a>
+            @else
+                <button type="button" @click="showLoginModal = true; document.querySelector('[data-mobile-menu]').classList.add('hidden')"
+                    class="block w-full text-left px-2 py-2 rounded-md hover:bg-gray-50">
+                    Keranjang
+                </button>
+            @endauth
             <a href="{{ route('wishlist.index') }}" class="block px-2 py-2 rounded-md hover:bg-gray-50">
                 Wishlist
             </a>
