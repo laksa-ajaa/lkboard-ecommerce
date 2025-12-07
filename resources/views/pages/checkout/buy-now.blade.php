@@ -1,13 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Checkout – ' . config('app.name'))
+@section('title', 'Beli Langsung – ' . config('app.name'))
 
 @section('content')
     <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-0" x-data="{
-        shippingMethods: {},
+        shippingMethod: 'standard',
         paymentMethod: 'mandiri_va',
         shippingCost: 15000,
         subtotal: {{ $subtotal }},
+        quantity: {{ $item['quantity'] }},
+        price: {{ $item['price'] }},
+        stock: {{ $item['stock'] }},
         addressData: {
             name: '{{ old('name', $savedAddress->name ?? $user->name) }}',
             email: '{{ old('email', $savedAddress->email ?? $user->email) }}',
@@ -19,7 +22,6 @@
         },
         showAddressModal: false,
         hasAddress: {{ $savedAddress ?? null ? 'true' : 'false' }},
-        cartItems: @js($cartItems),
         loading: false,
         shippingCosts: {
             standard: 15000,
@@ -31,14 +33,13 @@
             return new Intl.NumberFormat('id-ID').format(price);
         },
         updateShippingCost() {
-            let total = 0;
-            for (let key in this.shippingMethods) {
-                total += this.shippingCosts[this.shippingMethods[key]] || 15000;
-            }
-            this.shippingCost = total || 15000;
+            this.shippingCost = this.shippingCosts[this.shippingMethod] || 15000;
         },
         get total() {
             return this.subtotal + this.shippingCost;
+        },
+        get itemTotal() {
+            return this.price * this.quantity;
         },
         openAddressModal() {
             this.showAddressModal = true;
@@ -74,84 +75,43 @@
                 alert('Mohon lengkapi semua field yang wajib diisi');
             }
         },
-        async updateQuantity(itemId, newQuantity) {
-            const item = this.cartItems.find(i => i.id === itemId);
-            if (!item) return;
-    
+        updateQuantity(newQuantity) {
             newQuantity = parseInt(newQuantity);
             if (isNaN(newQuantity) || newQuantity < 1) {
                 newQuantity = 1;
             }
-    
-            // Check stock limit
-            if (newQuantity > item.stock) {
-                alert('Stok tidak mencukupi. Stok tersedia: ' + item.stock);
-                newQuantity = item.stock;
+            if (newQuantity > this.stock) {
+                alert('Stok tidak mencukupi. Stok tersedia: ' + this.stock);
+                newQuantity = this.stock;
             }
-    
-            this.loading = true;
-            try {
-                const response = await fetch(`{{ route('checkout.update-quantity', ['id' => '__ID__']) }}`.replace('__ID__', itemId) + '?items=' + encodeURIComponent(JSON.stringify(this.cartItems.map(i => i.id))), {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({ quantity: newQuantity })
-                });
-    
-                const data = await response.json();
-    
-                if (data.success) {
-                    item.quantity = data.quantity;
-                    this.subtotal = data.subtotal;
-                    // Trigger Alpine.js reactivity by updating cartItems reference
-                    this.cartItems = [...this.cartItems];
-                    // Dispatch event to update nested scopes
-                    this.$dispatch('quantity-updated', { itemId, quantity: data.quantity });
-                } else {
-                    alert(data.message || 'Terjadi kesalahan');
-                    // Reload page to get latest data
-                    if (data.message && data.message.includes('Stok')) {
-                        window.location.reload();
-                    }
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat memperbarui jumlah');
-            } finally {
-                this.loading = false;
-            }
-        },
-        init() {
-            @foreach($cartItems as $index => $item)
-            this.shippingMethods[{{ $item['id'] }}] = 'standard';
-            @endforeach
-            this.updateShippingCost();
+            this.quantity = newQuantity;
+            this.subtotal = this.price * this.quantity;
         }
-    }" x-init="init()">
+    }" x-init="updateShippingCost()">
         {{-- Breadcrumb --}}
         <nav class="mb-6 flex items-center gap-2 text-xs text-slate-600">
             <a href="{{ route('home') }}" class="hover:text-indigo-600">Beranda</a>
             <span>/</span>
-            <a href="{{ route('cart.index') }}" class="hover:text-indigo-600">Keranjang</a>
+            <a href="{{ $item['product_url'] }}" class="hover:text-indigo-600">Produk</a>
             <span>/</span>
-            <span class="text-slate-900 font-medium">Checkout</span>
+            <span class="text-slate-900 font-medium">Beli Langsung</span>
         </nav>
 
         {{-- Header --}}
         <div class="mb-8">
-            <h1 class="text-3xl font-extrabold text-slate-900">Checkout</h1>
+            <h1 class="text-3xl font-extrabold text-slate-900">Beli Langsung</h1>
             <p class="mt-2 text-sm text-slate-600">Lengkapi informasi pengiriman dan pembayaran</p>
         </div>
 
-        <form method="POST" action="{{ route('checkout.store') }}">
+        <form method="POST" action="{{ route('checkout.buy-now.store') }}">
             @csrf
 
-            {{-- Hidden input untuk items dari query string (untuk beli langsung) --}}
-            @if (request()->has('items'))
-                <input type="hidden" name="items" value="{{ request()->get('items') }}">
+            {{-- Hidden inputs for product data --}}
+            <input type="hidden" name="product_id" value="{{ $item['product_id'] }}">
+            @if($item['variant_id'])
+                <input type="hidden" name="variant_id" value="{{ $item['variant_id'] }}">
             @endif
+            <input type="hidden" name="quantity" x-model="quantity">
 
             {{-- Hidden inputs for address data from modal --}}
             <input type="hidden" name="name"
@@ -175,11 +135,12 @@
             <input type="hidden" name="postal_code"
                 :value="addressData.postal_code || '{{ old('postal_code', $savedAddress->postal_code ?? '') }}'"
                 value="{{ old('postal_code', $savedAddress->postal_code ?? '') }}" required>
+            <input type="hidden" name="shipping_method" x-model="shippingMethod">
 
             <div class="grid gap-8 lg:grid-cols-3">
-                {{-- Left Column: Alamat & Ringkasan Pesanan --}}
+                {{-- Left Column: Alamat & Produk --}}
                 <div class="lg:col-span-2 space-y-4">
-                    {{-- Informasi Alamat Card (Minimalis) --}}
+                    {{-- Informasi Alamat Card --}}
                     <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                         <div class="flex items-center justify-between mb-4">
                             <h2 class="text-lg font-semibold text-slate-900">Alamat Pengiriman</h2>
@@ -202,90 +163,75 @@
                         </div>
                     </div>
 
-                    @foreach ($cartItems as $index => $item)
-                        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" x-data="{
-                            itemId: {{ $item['id'] }},
-                            quantity: {{ $item['quantity'] }},
-                            price: {{ $item['price'] }},
-                            stock: {{ $item['stock'] }},
-                            get totalPrice() {
-                                return this.price * this.quantity;
-                            }
-                        }"
-                            @quantity-updated.window="if ($event.detail.itemId === itemId) { quantity = $event.detail.quantity; }">
-                            {{-- Product Info --}}
-                            <div class="mb-4 flex gap-4">
-                                <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                                    @if (!empty($item['image']))
-                                        <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}"
-                                            class="h-full w-full object-cover">
-                                    @else
-                                        <div class="flex h-full w-full items-center justify-center text-slate-400">
-                                            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                        </div>
-                                    @endif
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <h3 class="text-base font-semibold text-slate-900">{{ $item['name'] }}</h3>
-                                    @if (!empty($item['variant']))
-                                        <p class="mt-1 text-sm text-slate-600">Varian: {{ $item['variant'] }}</p>
-                                    @endif
-
-                                    {{-- Quantity Selector --}}
-                                    <div class="mt-3 flex items-center gap-2">
-                                        <label class="text-sm font-medium text-slate-600">Jumlah:</label>
-                                        <div class="flex items-center gap-2">
-                                            <button type="button" @click="updateQuantity(itemId, quantity - 1)"
-                                                :disabled="quantity <= 1 || loading"
-                                                class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white">
-                                                <svg class="h-4 w-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M20 12H4" />
-                                                </svg>
-                                            </button>
-                                            <input type="number" x-model.number="quantity" min="1"
-                                                :max="stock" @change="updateQuantity(itemId, quantity)"
-                                                @blur="updateQuantity(itemId, quantity)"
-                                                class="h-8 w-16 rounded-lg border border-slate-200 bg-white px-2 text-center text-xs text-slate-900 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                                            <button type="button" @click="updateQuantity(itemId, quantity + 1)"
-                                                :disabled="quantity >= stock || loading"
-                                                class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white">
-                                                <svg class="h-4 w-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M12 4v16m8-8H4" />
-                                                </svg>
-                                            </button>
-                                        </div>
+                    {{-- Product Info --}}
+                    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <div class="mb-4 flex gap-4">
+                            <div class="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                                @if (!empty($item['image']))
+                                    <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}"
+                                        class="h-full w-full object-cover">
+                                @else
+                                    <div class="flex h-full w-full items-center justify-center text-slate-400">
+                                        <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
                                     </div>
-
-                                    <p class="mt-2 text-lg font-bold text-indigo-600">
-                                        Rp <span x-text="formatPrice(totalPrice)"></span>
-                                    </p>
-                                </div>
+                                @endif
                             </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-base font-semibold text-slate-900">{{ $item['name'] }}</h3>
+                                @if (!empty($item['variant']))
+                                    <p class="mt-1 text-sm text-slate-600">Varian: {{ $item['variant'] }}</p>
+                                @endif
 
-                            {{-- Ekspedisi Dropdown --}}
-                            <div class="border-t border-slate-200 pt-4">
-                                <label class="block text-sm font-medium text-slate-900 mb-2">
-                                    Pilih Ekspedisi
-                                </label>
-                                <select name="shipping_method[{{ $item['id'] }}]"
-                                    x-model="shippingMethods[{{ $item['id'] }}]" @change="updateShippingCost()"
-                                    required
-                                    class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                                    <option value="standard" selected>JNE Reguler - Rp 15.000 (3-5 hari)</option>
-                                    <option value="express">JNE Express - Rp 25.000 (1-2 hari)</option>
-                                    <option value="jnt">JNT - Rp 16.000 (3-5 hari)</option>
-                                    <option value="sicepat">SiCepat - Rp 18.000 (2-4 hari)</option>
-                                </select>
+                                {{-- Quantity Selector --}}
+                                <div class="mt-3 flex items-center gap-2">
+                                    <label class="text-sm font-medium text-slate-600">Jumlah:</label>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" @click="updateQuantity(quantity - 1)"
+                                            :disabled="quantity <= 1 || loading"
+                                            class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M20 12H4" />
+                                            </svg>
+                                        </button>
+                                        <input type="number" x-model.number="quantity" min="1"
+                                            :max="stock" @change="updateQuantity(quantity)"
+                                            @blur="updateQuantity(quantity)"
+                                            class="h-8 w-16 rounded-lg border border-slate-200 bg-white px-2 text-center text-xs text-slate-900 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                        <button type="button" @click="updateQuantity(quantity + 1)"
+                                            :disabled="quantity >= stock || loading"
+                                            class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 4v16m8-8H4" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <p class="mt-2 text-lg font-bold text-indigo-600">
+                                    Rp <span x-text="formatPrice(itemTotal)"></span>
+                                </p>
                             </div>
                         </div>
-                    @endforeach
+
+                        {{-- Ekspedisi Dropdown --}}
+                        <div class="border-t border-slate-200 pt-4">
+                            <label class="block text-sm font-medium text-slate-900 mb-2">
+                                Pilih Ekspedisi
+                            </label>
+                            <select x-model="shippingMethod" @change="updateShippingCost()" required
+                                class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                <option value="standard" selected>JNE Reguler - Rp 15.000 (3-5 hari)</option>
+                                <option value="express">JNE Express - Rp 25.000 (1-2 hari)</option>
+                                <option value="jnt">JNT - Rp 16.000 (3-5 hari)</option>
+                                <option value="sicepat">SiCepat - Rp 18.000 (2-4 hari)</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Right Column: Metode Pembayaran & Ringkasan --}}
@@ -485,3 +431,4 @@
         </div>
     </div>
 @endsection
+

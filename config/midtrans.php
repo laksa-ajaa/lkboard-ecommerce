@@ -24,4 +24,9 @@ return [
     'is_sanitized'  => env('MIDTRANS_SANITIZE', true),
     'is_3ds'        => env('MIDTRANS_3DS', true),
 
+    // Snap URL (sandbox/production)
+    'snap_url' => env('MIDTRANS_IS_PRODUCTION', false)
+        ? 'https://app.midtrans.com/snap/snap.js'
+        : 'https://app.sandbox.midtrans.com/snap/snap.js',
+
 ];

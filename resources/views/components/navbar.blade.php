@@ -179,9 +179,9 @@
 
                         <div x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false"
                             class="absolute right-0 mt-2 w-44 rounded-xl border border-slate-200 bg-white shadow-lg shadow-slate-900/10 text-[11px] text-slate-900 py-1.5">
-                            <a href="{{ route('account.index') }}"
+                            <a href="{{ route('account.profile') }}"
                                 class="flex items-center px-3 py-2 hover:bg-slate-100">
-                                Akun Saya
+                                Profile
                             </a>
                             <a href="{{ route('cart.index') }}"
                                 class="flex items-center px-3 py-2 hover:bg-slate-100">

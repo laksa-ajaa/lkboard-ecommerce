@@ -189,69 +189,69 @@
                     {{-- Wishlist Grid --}}
                     @if ($wishlistItems->count() > 0)
                         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            @foreach ($wishlistItems as $item)
-                                <div
-                                    class="group flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden hover:-translate-y-1 hover:border-indigo-200 hover:shadow-[0_18px_55px_rgba(15,23,42,0.18)] transition-all duration-300">
-                                    <a href="{{ $item['product_url'] }}"
-                                        class="relative block aspect-[4/3] bg-slate-900 overflow-hidden">
-                                        @if (!empty($item['image']))
-                                            <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}"
-                                                class="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500">
-                                        @else
-                                            <div class="h-full w-full flex items-center justify-center text-xs text-slate-500">
-                                                <svg class="h-12 w-12 text-slate-400" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                            </div>
-                                        @endif
-
-                                        @if (!empty($item['stock']) && $item['stock'] > 0)
-                                            <div class="absolute right-3 bottom-3">
-                                                <span
-                                                    class="rounded-full bg-slate-950/70 px-2 py-1 text-[10px] text-slate-100 border border-slate-700/70 backdrop-blur">
-                                                    Stok: {{ $item['stock'] }}
-                                                </span>
-                                            </div>
-                                        @endif
-                                    </a>
-
-                                    <div class="flex flex-1 flex-col px-3 pt-3 pb-3">
-                                        @if (!empty($item['category']))
-                                            <p class="text-[11px] text-slate-500 mb-1">{{ $item['category'] }}</p>
-                                        @endif
-                                        <a href="{{ $item['product_url'] }}"
-                                            class="text-sm font-semibold text-slate-900 line-clamp-2 tracking-tight hover:text-indigo-600 transition-colors">
-                                            {{ $item['name'] }}
-                                        </a>
-
-                                        <div class="mt-3">
-                                            <p class="text-sm font-semibold text-indigo-600">
-                                                Rp {{ number_format($item['price'], 0, ',', '.') }}
-                                            </p>
-                                            @if (!empty($item['original_price']) && $item['original_price'] > $item['price'])
-                                                <p class="text-[11px] text-slate-500 line-through">
-                                                    Rp {{ number_format($item['original_price'], 0, ',', '.') }}
-                                                </p>
-                                            @endif
-                                        </div>
-
-                                        {{-- Actions --}}
-                                        <div class="mt-3 flex gap-2">
-                                            <a href="{{ $item['product_url'] }}"
-                                                class="flex-1 rounded-lg bg-indigo-500 px-3 py-2 text-center text-xs font-semibold text-white hover:bg-indigo-400 transition-colors">
-                                                Lihat Detail
-                                            </a>
-                                            <button type="button"
-                                                class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                                                onclick="removeFromWishlist({{ $item['id'] }})">
-                                                Hapus
-                                            </button>
-                                        </div>
-                                    </div>
+                @foreach ($wishlistItems as $item)
+                    <div
+                        class="group flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden hover:-translate-y-1 hover:border-indigo-200 hover:shadow-[0_18px_55px_rgba(15,23,42,0.18)] transition-all duration-300">
+                        <a href="{{ $item['product_url'] }}"
+                            class="relative block aspect-[4/3] bg-slate-900 overflow-hidden">
+                            @if (!empty($item['image']))
+                                <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}"
+                                    class="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500">
+                            @else
+                                <div class="h-full w-full flex items-center justify-center text-xs text-slate-500">
+                                    <svg class="h-12 w-12 text-slate-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
                                 </div>
-                            @endforeach
+                            @endif
+
+                            @if (!empty($item['stock']) && $item['stock'] > 0)
+                                <div class="absolute right-3 bottom-3">
+                                    <span
+                                        class="rounded-full bg-slate-950/70 px-2 py-1 text-[10px] text-slate-100 border border-slate-700/70 backdrop-blur">
+                                        Stok: {{ $item['stock'] }}
+                                    </span>
+                                </div>
+                            @endif
+                        </a>
+
+                        <div class="flex flex-1 flex-col px-3 pt-3 pb-3">
+                            @if (!empty($item['category']))
+                                <p class="text-[11px] text-slate-500 mb-1">{{ $item['category'] }}</p>
+                            @endif
+                            <a href="{{ $item['product_url'] }}"
+                                class="text-sm font-semibold text-slate-900 line-clamp-2 tracking-tight hover:text-indigo-600 transition-colors">
+                                {{ $item['name'] }}
+                            </a>
+
+                            <div class="mt-3">
+                                <p class="text-sm font-semibold text-indigo-600">
+                                    Rp {{ number_format($item['price'], 0, ',', '.') }}
+                                </p>
+                                @if (!empty($item['original_price']) && $item['original_price'] > $item['price'])
+                                    <p class="text-[11px] text-slate-500 line-through">
+                                        Rp {{ number_format($item['original_price'], 0, ',', '.') }}
+                                    </p>
+                                @endif
+                            </div>
+
+                            {{-- Actions --}}
+                            <div class="mt-3 flex gap-2">
+                                <a href="{{ $item['product_url'] }}"
+                                    class="flex-1 rounded-lg bg-indigo-500 px-3 py-2 text-center text-xs font-semibold text-white hover:bg-indigo-400 transition-colors">
+                                    Lihat Detail
+                                </a>
+                                <button type="button"
+                                    class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                                    onclick="removeFromWishlist({{ $item['id'] }})">
+                                    Hapus
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
                         </div>
 
                         {{-- Pagination --}}

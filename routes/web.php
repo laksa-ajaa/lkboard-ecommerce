@@ -1,13 +1,17 @@
 <?php
 
+use App\Http\Controllers\AddressController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MidtransWebhookController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -55,11 +59,18 @@ Route::prefix('cart')->name('cart.')->middleware('auth')->controller(CartControl
 Route::prefix('checkout')->name('checkout.')->middleware('auth')->controller(CheckoutController::class)->group(function () {
     Route::get('/', 'index')->name('index');
     Route::post('/', 'store')->name('store');
+    Route::get('/buy-now', 'buyNow')->name('buy-now');
+    Route::post('/buy-now', 'storeBuyNow')->name('buy-now.store');
     Route::put('/update-quantity/{id}', 'updateQuantity')->name('update-quantity');
     Route::post('/save-address', 'saveAddress')->name('save-address');
     Route::get('/payment/{order}', 'payment')->name('payment');
+    Route::post('/check-status/{order}', 'checkStatus')->name('check-status');
     Route::get('/success', fn() => view('pages.checkout.success'))->name('success');
+    Route::get('/failed', fn() => view('pages.checkout.failed'))->name('failed');
 });
+
+// Midtrans webhook route (no auth required for notification)
+Route::post('/midtrans/webhook', [MidtransWebhookController::class, 'webhook'])->name('midtrans.webhook');
 
 // Midtrans callback routes (no auth required for notification)
 Route::prefix('checkout')->name('checkout.')->group(function () {
@@ -76,17 +87,25 @@ Route::prefix('wishlist')->name('wishlist.')->middleware('auth')->controller(Wis
     Route::delete('/{id}', 'destroy')->name('destroy');
 });
 
-// Account
-Route::prefix('account')->name('account.')->group(function () {
+// Account (requires authentication)
+Route::prefix('account')->name('account.')->middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::get('/', fn() => view('pages.account.index'))->name('index');
     Route::get('/settings', fn() => view('pages.account.settings'))->name('settings');
 
-    Route::prefix('transactions')->name('transactions.')->group(function () {
-        Route::get('/', fn() => view('pages.account.transactions'))->name('index');
-        Route::get('/{id}', fn($id) => view('pages.account.transaction-show', compact('id')))->name('show');
+    Route::prefix('transactions')->name('transactions.')->controller(TransactionController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{id}', 'show')->name('show');
     });
 
-    Route::get('/address', fn() => view('pages.account.address'))->name('address.index');
+    Route::prefix('address')->name('address.')->controller(AddressController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::put('/{id}', 'update')->name('update');
+        Route::delete('/{id}', 'destroy')->name('destroy');
+        Route::post('/{id}/set-default', 'setDefault')->name('set-default');
+    });
+
     Route::get('/tracking', fn() => view('pages.account.tracking'))->name('tracking');
 });
 

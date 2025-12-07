@@ -81,22 +81,22 @@ class WishlistController extends Controller
         $wishlistItems = $wishlists
             ->filter(fn($wishlist) => $wishlist->product !== null)
             ->map(function ($wishlist) {
-                $product = $wishlist->product;
-                
-                return [
-                    'id' => $wishlist->id,
-                    'product_id' => $product->id,
-                    'name' => $product->name,
-                    'slug' => $product->slug,
-                    'price' => $product->price,
-                    'original_price' => $product->compare_at_price,
-                    'image' => $product->thumbnail,
-                    'category' => $product->category?->name,
+            $product = $wishlist->product;
+            
+            return [
+                'id' => $wishlist->id,
+                'product_id' => $product->id,
+                'name' => $product->name,
+                'slug' => $product->slug,
+                'price' => $product->price,
+                'original_price' => $product->compare_at_price,
+                'image' => $product->thumbnail,
+                'category' => $product->category?->name,
                     'category_slug' => $product->category?->slug,
-                    'stock' => $product->stock,
+                'stock' => $product->stock,
                     'created_at' => $wishlist->created_at,
-                    'product_url' => route('products.show', $product->slug),
-                ];
+                'product_url' => route('products.show', $product->slug),
+            ];
             });
 
         // Apply sorting

@@ -127,6 +127,7 @@ class CartController extends Controller
             ->where('variant_id', $validated['variant_id'])
             ->first();
         
+        $cartItem = null;
         if ($existingItem) {
             // Update quantity if item exists
             $newQuantity = $existingItem->quantity + $validated['quantity'];
@@ -139,9 +140,10 @@ class CartController extends Controller
             }
             
             $existingItem->update(['quantity' => $newQuantity]);
+            $cartItem = $existingItem;
         } else {
             // Create new cart item
-            CartItem::create([
+            $cartItem = CartItem::create([
                 'cart_id' => $cart->id,
                 'product_id' => $product->id,
                 'variant_id' => $variant?->id,
@@ -153,6 +155,7 @@ class CartController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Produk berhasil ditambahkan ke keranjang!',
+            'cart_item_id' => $cartItem->id,
         ]);
     }
 

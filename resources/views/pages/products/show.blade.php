@@ -157,6 +157,31 @@
                         // Network error or other issues
                         alert('Terjadi kesalahan saat menambahkan ke keranjang. Silakan coba lagi.');
                     });
+            },
+            buyNow() {
+                // Cek apakah user sudah login
+                if (!this.isAuthenticated) {
+                    this.showLoginModal = true;
+                    return;
+                }
+        
+                // Validasi varian harus dipilih (jika produk memiliki varian)
+                const hasVariants = {{ $productModel->variants->count() > 0 ? 'true' : 'false' }};
+                if (hasVariants && !this.selectedVariant) {
+                    this.showErrorAlert = true;
+                    setTimeout(() => { this.showErrorAlert = false; }, 3000);
+                    return;
+                }
+        
+                // Langsung redirect ke buy now checkout (tidak menggunakan cart)
+                const params = new URLSearchParams({
+                    product_id: {{ $productModel->id }},
+                    quantity: this.quantity
+                });
+                if (this.selectedVariant) {
+                    params.append('variant_id', this.selectedVariant);
+                }
+                window.location.href = '{{ route('checkout.buy-now') }}?' + params.toString();
             }
         }" x-init="$watch('selectedVariant', () => { validateQuantity(); })">
 
@@ -541,7 +566,7 @@
                                     class="w-full rounded-lg bg-indigo-500 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-400 transition-colors shadow-sm shadow-indigo-500/40 cursor-pointer">
                                     Tambah ke Keranjang
                                 </button>
-                                <button type="button"
+                                <button type="button" @click="buyNow()"
                                     class="w-full rounded-lg border border-indigo-500 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 transition-colors cursor-pointer">
                                     Beli Langsung
                                 </button>
